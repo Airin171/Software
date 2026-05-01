@@ -1,25 +1,48 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
+import AuthLayout from '../components/AuthLayout'
 import FormInput from '../components/FormInput'
 import api from '../services/api'
 
 export default function NannySignup(){
   const [form, setForm] = useState({ name: '', email: '', password: '', experience: '' })
+  const [status, setStatus] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
   const submit = async e =>{
     e.preventDefault()
-    try{ await api.post('/auth/signup', { ...form, role: 'nanny' }); alert('Registered') }catch(e){alert('Error')}
+    setStatus('')
+    setError('')
+    setLoading(true)
+    try{
+      await api.post('/auth/signup', { ...form, role: 'nanny' })
+      setStatus('Nanny account created. You can sign in now.')
+    }catch(e){
+      setError('Registration failed. Please check the form and try again.')
+    } finally {
+      setLoading(false)
+    }
   }
+
   return (
-    <div className="p-8">
-      <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
-        <h2 className="text-xl font-bold mb-4">Nanny Signup</h2>
-        <form onSubmit={submit}>
-          <FormInput label="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
-          <FormInput label="Email" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
-          <FormInput label="Password" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
-          <FormInput label="Years of Experience" value={form.experience} onChange={e => setForm({...form, experience: e.target.value})} />
-          <button className="mt-3 px-4 py-2 bg-green-600 text-white rounded" type="submit">Create Account</button>
-        </form>
-      </div>
-    </div>
+    <AuthLayout
+      eyebrow="Care team"
+      title="Create your nanny profile"
+      subtitle="Add your account details so you can manage care updates and daily activity records."
+      footer={<>Already registered? <Link to="/login" className="font-semibold text-teal-700 hover:text-teal-800">Sign in</Link></>}
+    >
+      <form onSubmit={submit} className="space-y-5">
+        {status && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{status}</div>}
+        {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+        <FormInput label="Full name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+        <FormInput label="Email address" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+        <FormInput label="Password" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+        <FormInput label="Years of experience" value={form.experience} onChange={e => setForm({...form, experience: e.target.value})} />
+        <button className="w-full rounded-lg bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-700/20 transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-slate-400" type="submit" disabled={loading}>
+          {loading ? 'Creating account...' : 'Create nanny account'}
+        </button>
+      </form>
+    </AuthLayout>
   )
 }
